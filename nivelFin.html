@@ -1,0 +1,160 @@
+<html lang="en">
+<body background="ts.jpg">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  
+  <a href="Proyect.php" class="pink-text">Inicio</a>
+<canvas id = "canvas"></canvas>
+<script>
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const audio1 = new Audio('pew.mp3');
+const audio2 = new Audio('pik.mp3');  // Supongo que tienes otro sonido para restar puntos
+
+class Circulo {
+  constructor(color) {
+    this.radio = Math.random() * 20 + 10;
+    this.x = Math.random() * canvas.width;
+    this.y = -this.radio;
+    this.color = color;
+    this.velocidad = Math.random() * 3 + 2;
+    this.imagenSumar = new Image();
+    this.imagenSumar.src = 'comp.png';
+    this.imagenRestar = new Image();
+    this.imagenRestar.src = 'ca.png';
+
+  }
+
+  dibujar() {
+
+    if (this.color === 'pink') {
+      ctx.drawImage(this.imagenSumar, this.x - this.radio, this.y - this.radio, this.radio * 2, this.radio * 2);
+    } else {
+      ctx.drawImage(this.imagenRestar, this.x - this.radio, this.y - this.radio, this.radio * 2, this.radio * 2);
+    }
+  }
+
+  actualizar() {
+    this.y += this.velocidad;
+    this.dibujar();
+  }
+}
+
+class Rectangulo {
+  constructor() {
+    this.ancho = 150;
+    this.x = canvas.width / 2 - this.ancho / 2;
+    this.alto = 80;
+    this.y = canvas.height - this.alto - 30;
+    this.velocidadX = 0;
+    this.velocidadY = 0;
+    this.imagen = new Image();
+    this.imagen.src = "carro.png";
+  }
+
+  dibujar() {
+    ctx.drawImage(this.imagen, this.x, this.y, this.ancho, this.alto);
+  }
+
+  actualizar() {
+    this.x += this.velocidadX;
+    this.y += this.velocidadY;
+    
+    // movimiento del rectángulo
+    if (this.x < 0) this.x = 0;
+    if (this.x + this.ancho > canvas.width) this.x = canvas.width - this.ancho;
+    if (this.y < 0) this.y = 0;
+    if (this.y + this.alto > canvas.height) this.y = canvas.height - this.alto;
+    
+    this.dibujar();
+  }
+}
+
+function detectarColision(circulo, rect) {
+  return (
+    circulo.x + circulo.radio > rect.x &&
+    circulo.x - circulo.radio < rect.x + rect.ancho &&
+    circulo.y + circulo.radio > rect.y &&
+    circulo.y - circulo.radio < rect.y + rect.alto
+  );
+}
+
+let rectangulo = new Rectangulo();
+let circulos = [];
+let puntos = 0;
+let vidas = 3;
+
+function generarCirculos() {
+  let color = Math.random() > 0.5 ? 'pink' : 'lightblue';
+  circulos.push(new Circulo(color));
+}
+
+function actualizarJuego() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  rectangulo.actualizar();
+
+  for (let i = 0; i < circulos.length; i++) {
+    let circulo = circulos[i];
+    circulo.actualizar();
+    if (detectarColision(circulo, rectangulo)) {
+      if (circulo.color === 'pink') {
+        puntos += 10;
+        audio1.play();
+      } else {
+        puntos -= 5;
+        vidas--;
+        audio2.play();
+      }
+      circulos.splice(i, 1);
+      i--;
+    } else if (circulo.y - circulo.radio > canvas.height) {
+      circulos.splice(i, 1);
+      i--;
+    }
+  }
+
+ 
+
+  if (vidas <= 0) {
+    ctx.font = '40px Arial';
+    ctx.fillStyle = 'red';
+    ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+    return;
+  }
+
+  ctx.font = '20px Arial';
+  ctx.fillStyle = 'black';
+  ctx.fillText('Puntos: ' + puntos, 10, 30);
+  ctx.fillText('Vidas: ' + vidas, 10, 60);
+  requestAnimationFrame(actualizarJuego);
+}
+
+window.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowLeft') {
+    rectangulo.velocidadX = -10;
+  } else if (e.key === 'ArrowRight') {
+    rectangulo.velocidadX = 10;
+  } else if (e.key === 'ArrowUp') {
+    rectangulo.velocidadY = -10;
+  } else if (e.key === 'ArrowDown') {
+    rectangulo.velocidadY = 10;
+  }
+});
+
+window.addEventListener('keyup', function (e) {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    rectangulo.velocidadX = 0;
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    rectangulo.velocidadY = 0;
+  }
+});
+
+setInterval(generarCirculos, 500);
+requestAnimationFrame(actualizarJuego);
+
+</script>
+</body>
+</html>

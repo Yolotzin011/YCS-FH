@@ -1,0 +1,132 @@
+<html lang="en">
+<body background="ros.jpg">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	
+	<a href="Proyect.php" class="pink-text">Inicio</a>
+<canvas id = "canvas"></canvas>
+<script>
+// Configuración inicial
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+
+// Clases para los circulos y el rectángulo
+class Circulo {
+constructor(color) {
+this.radio = Math.random() * 20 + 10;
+this.x = Math.random() * canvas.width;
+this.y = -this.radio;
+this.color = color;
+this.velocidad = Math.random() * 3 + 2;
+}
+
+dibujar() {
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.radio, 0, Math. PI * 2);
+ctx.fillStyle = this.color;
+ctx.fill();
+}
+
+actualizar() {
+this.y += this.velocidad;
+this.dibujar();
+}
+}
+
+class Rectangulo {
+constructor() {
+this.ancho = 150;
+this.x = canvas.width / 2 - this.ancho / 2;
+this.alto = 70;
+this.y = canvas.height - this.alto -30;
+this.velocidad = 0;
+this.imagen=new Image();
+this.imagen.src="carro.png";
+}
+
+dibujar() {
+	ctx.drawImage(this.imagen, this.x, this.y, this.ancho, this.alto);
+}
+
+actualizar() {
+this.x += this.velocidad;
+this.dibujar();
+}
+}
+
+//Función para detectar colisiones
+function detectarColision (circulo, rect) {
+return (
+circulo.x + circulo.radio > rect.x &&
+circulo.x - circulo.radio < rect.x + rect.ancho &&
+circulo.y + circulo.radio > rect.y &&
+circulo.y - circulo.radio < rect.y + rect.alto 
+);
+}
+
+// Instancias y variables del juego
+let rectangulo = new Rectangulo();
+let circulos = [];
+let puntos = 0;
+
+//Función para generar circulos
+function generarCirculos () {
+let color = Math.random() > 0.5 ? '#FF69B4': '#BA55D3';
+circulos.push(new Circulo(color));
+}
+
+
+//Función para actualizar el juego
+function actualizarJuego() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+rectangulo.actualizar();
+
+for (let i = 0; i < circulos.length; i++) {
+	let circulo = circulos[i];
+	circulo.actualizar();
+	if (detectarColision(circulo,rectangulo)){
+if(circulo.color === '#FF69B4') {
+	puntos += 10;
+}else{
+	puntos -= 5;
+}
+circulos.splice(i,1);
+i--;
+}else if (circulo.y - circulo.radio > canvas.height){
+	circulos.splice(i, 1);
+	i--;
+}
+}
+
+if(puntos>=500){
+	window.location.href='nivelFin.html';
+return;
+}
+
+ctx.font = '20px Arial';
+ctx.fillStyle = 'black';
+ctx.fillText('puntos: ' + puntos + '/500', 10, 30);
+requestAnimationFrame(actualizarJuego);
+}
+
+window.addEventListener('keydown', function(e){
+if(e.key === 'ArrowLeft'){
+	rectangulo.velocidad = -10;
+}else if(e.key === 'ArrowRight'){
+	rectangulo.velocidad = 10;
+}
+});
+
+window.addEventListener('keyup', function(e){
+	if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+		rectangulo.velocidad = 0;
+	}
+});
+
+setInterval(generarCirculos, 500);
+requestAnimationFrame(actualizarJuego);
+</script>
+</body>
+</html>
